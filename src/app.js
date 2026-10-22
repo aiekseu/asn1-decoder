@@ -2,7 +2,7 @@
 'use strict';
 
 // Версия релиза — меняется при каждом выпуске (см. CHANGELOG.md)
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 
 /* ======================= Состояние и взаимодействие ======================= */
 const $ = s => document.querySelector(s);
@@ -51,12 +51,34 @@ function decodeBytesList(list, sourceLabel) {
   writeHash(items);
 }
 
+function decodeInput(text, label) {
+  const list = blobsFromText(text);
+  if (!list.length) { reset(); return; }
+  decodeBytesList(list, label);
+}
+// Текст, вставленный из JSON или кода: в кавычках и с литералами \n вместо переводов строк
+function unescapeText(text) {
+  let t = text.trim();
+  const notes = [];
+  const q = /^(["'`])([\s\S]*)\1,?$/.exec(t);
+  if (q) { t = q[2]; notes.push('кавычки'); }
+  if (/\\[rnt]/.test(t)) { t = t.replace(/\\r\\n|\\n|\\r/g, '\n').replace(/\\t/g, '').replace(/\\\//g, '/'); notes.unshift('символы переноса строки (\\n)'); }
+  return notes.length ? { text: t, notes } : null;
+}
 function handleText(text, label) {
   try {
-    const list = blobsFromText(text);
-    if (!list.length) { reset(); return; }
-    decodeBytesList(list, label);
+    decodeInput(text, label);
   } catch (e) {
+    const fixed = unescapeText(text);
+    if (fixed) {
+      try {
+        decodeInput(fixed.text, label);
+        src.value = fixed.text;
+        fitInput();
+        toast('Из вставленного текста удалены ' + fixed.notes.join(' и '), 4000);
+        return;
+      } catch { /* показываем исходную ошибку */ }
+    }
     fail(e);
   }
 }
@@ -185,10 +207,10 @@ function applySearch() {
 
 /* ---------- Копирование ---------- */
 let toastTimer;
-function toast(msg) {
+function toast(msg, ms = 1600) {
   const t = $('#toast');
   t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms);
 }
 async function copy(text) {
   try { await navigator.clipboard.writeText(text); }
