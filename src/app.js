@@ -2,7 +2,7 @@
 'use strict';
 
 // Версия релиза — меняется при каждом выпуске (см. CHANGELOG.md)
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 
 /* ======================= Состояние и взаимодействие ======================= */
 const $ = s => document.querySelector(s);
