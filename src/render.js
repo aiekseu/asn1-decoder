@@ -103,11 +103,21 @@ function renderSection(s) {
   return sec;
 }
 
+function openExt(e) {
+  e.preventDefault();
+  const sec = $('#sec-ext');
+  if (!sec) return;
+  sec.classList.remove('closed');
+  sec.querySelector('.sec-head').setAttribute('aria-expanded', 'true');
+  updateToggleAll();
+  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function fact(label, value, opts = {}) {
   if (!value) return null;
-  return h('div', { class: 'fact', 'data-s': (label + ' ' + value).toLowerCase() },
+  return h('div', { class: 'fact', 'data-s': (label + ' ' + (opts.search || value)).toLowerCase() },
     h('dt', null, label),
-    h('dd', null, h('span', { class: opts.mono ? 'mono' : null, title: opts.title || null }, value), opts.copy !== false ? copyBtn(opts.copyText || value) : null));
+    h('dd', null, typeof value === 'string' ? h('span', { class: opts.mono ? 'mono' : null, title: opts.title || null }, value) : h('span', { title: opts.title || null }, value), opts.copy !== false ? copyBtn(opts.copyText || value) : null));
 }
 
 function renderSummary(m) {
@@ -168,11 +178,12 @@ function renderSummary(m) {
     m.kind === 'csr' ? fact('Криптопровайдер', m.csp) : null,
     eku && eku.node ? (() => {
       const names = [...new Set(kids(eku.node).map(c => oidName(oidOf(c)) || oidOf(c)))];
-      const text = names.slice(0, 3).join('; ') + (names.length > 3 ? ` и ещё ${names.length - 3}` : '');
-      return fact('Назначения', text, { copy: false, title: names.join('\n') });
+      const more = names.length - 3;
+      const text = [names.slice(0, 3).join('\n'), more > 0 ? h('a', { href: '#sec-ext', class: 'more', onclick: openExt }, ` и ещё ${more}`) : null];
+      return fact('Назначения', h('span', { class: 'multi' }, ...text.filter(Boolean)), { copy: false, title: names.join('\n'), search: names.join(' ') });
     })() : null,
     m.kind === 'cert' ? fact('Серийный номер', m.serialHex, { mono: true }) : null,
-    m.kind === 'cert' ? fact('Отпечаток SHA-1', m.sha1Thumb, { mono: true }) : fact('Идентификатор ключа', m.spki.keyId, { mono: true }),
+    m.kind === 'cert' ? fact('Thumbprint (SHA-1)', m.sha1Thumb, { mono: true }) : fact('Идентификатор ключа', m.spki.keyId, { mono: true }),
   ].filter(Boolean);
 
   const el = $('#summary');

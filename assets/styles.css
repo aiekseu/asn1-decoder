@@ -117,8 +117,7 @@ textarea#src {
 }
 textarea#src:focus { border-color: var(--accent); border-style: solid; background: var(--surface); }
 textarea#src::placeholder { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; color: var(--faint); line-height: 1.6; }
-.compact textarea#src { min-height: 64px; height: 64px; }
-.compact textarea#src:focus { min-height: 140px; }
+.compact textarea#src { min-height: 64px; max-height: calc(12 * 1.5 * 13px + 31px); }
 .input-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
 .input-actions .spacer { flex: 1; }
 .hint { color: var(--faint); font-size: 13px; }
@@ -171,6 +170,8 @@ kbd { font: 12px var(--mono); border: 1px solid var(--border-strong); border-bot
 .fact { padding: 8px 0; min-width: 0; position: relative; }
 .fact dt { font-size: 12.5px; color: var(--faint); }
 .fact dd { margin: 1px 0 0; font-size: 14.5px; word-break: break-word; display: flex; gap: 6px; align-items: baseline; }
+.fact dd .multi { white-space: pre-line; }
+.fact dd .more { white-space: nowrap; }
 .fact dd .mono { font-size: 13.5px; }
 
 /* toolbar */

@@ -344,7 +344,7 @@ function infoAccess(n) {
   });
 }
 
-const EXT_ORDER = ['2.5.29.15', '2.5.29.37', '1.2.643.100.111', '1.2.643.100.112', '2.5.29.32', '2.5.29.16', '1.2.643.100.114', '2.5.29.17', '2.5.29.19', '2.5.29.31', '1.3.6.1.5.5.7.1.1', '2.5.29.14', '2.5.29.35'];
+const EXT_ORDER = ['2.5.29.15', '2.5.29.37', '1.2.643.2.2.49.2', '1.2.643.100.114', '1.2.643.100.111', '1.2.643.100.112', '2.5.29.32', '2.5.29.16', '2.5.29.17', '2.5.29.19', '2.5.29.31', '1.3.6.1.5.5.7.1.1', '2.5.29.14', '2.5.29.35'];
 function extensionBlocks(exts) {
   const rank = o => { const i = EXT_ORDER.indexOf(o); return i < 0 ? 999 : i; };
   return [...exts].sort((a, b) => rank(a.oid) - rank(b.oid)).map(e => {
@@ -543,14 +543,17 @@ function buildCert(item) {
 
   checkKeyId(spki, exts);
   const sha1Thumb = sha1(item.der), sha256Thumb = sha256(item.der);
+  const skidExt = exts.find(e => e.oid === '2.5.29.14');
+  const skid = skidExt && skidExt.node ? hex(val(skidExt.node)) : null;
   const sections = [
     { id: 'general', title: 'Общие сведения', icon: 'doc', rows: [
       row('Тип', isCA ? 'Сертификат удостоверяющего центра' : 'Сертификат'),
       row('Версия', `X.509 v${version}`),
       row('Серийный номер', { text: serialHex, mono: true }, { copy: serialHex, note: { kind: 'muted', text: 'в десятичном виде: ' + intBig(serialBytes).toString() } }),
       row('Алгоритм подписи', oidName(sigOid) || sigOid, { oid: sigOid }),
-      row('Отпечаток SHA-1', { text: sha1Thumb, mono: true }, { copy: sha1Thumb, note: { kind: 'muted', text: 'используется в Windows и КриптоПро для поиска сертификата' } }),
-      row('Отпечаток SHA-256', { text: sha256Thumb, mono: true }, { copy: sha256Thumb }),
+      row('Отпечаток SHA-1 (thumbprint)', { text: sha1Thumb, mono: true }, { copy: sha1Thumb, note: { kind: 'muted', text: 'Классический thumbprint — хеш всего сертификата. Его показывают Windows и КриптоПро, по нему ищут сертификат' } }),
+      row('Отпечаток SHA-256', { text: sha256Thumb, mono: true }, { copy: sha256Thumb, note: { kind: 'muted', text: 'Тот же хеш всего сертификата, но по SHA-256; это не thumbprint в смысле Windows' } }),
+      ...(skid ? [row('SKID', { text: skid, mono: true }, { copy: skid, note: { kind: 'muted', text: 'Идентификатор ключа субъекта — это не отпечаток сертификата, а идентификатор его открытого ключа' } })] : []),
     ] },
     { id: 'subject', title: 'Владелец сертификата', icon: 'user', rows: nameRows(subject) },
     { id: 'issuer', title: 'Издатель (удостоверяющий центр)', icon: 'building', rows: nameRows(issuer) },

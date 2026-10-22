@@ -25,6 +25,7 @@ function decodeBytesList(list, sourceLabel) {
   renderPicker();
   show(0);
   $('#inputCard').classList.add('compact');
+  fitInput();
   $('#clear').hidden = false;
 }
 
@@ -58,6 +59,7 @@ function handleBytes(bytes, label) {
 function fail(e) {
   $('#result').hidden = true; $('#picker').hidden = true;
   $('#inputCard').classList.remove('compact');
+  fitInput();
   if (e instanceof UserError || e instanceof ParseError) {
     showError(e.message, 'Поддерживаются сертификаты (.cer, .crt, .der, .pem), запросы на сертификат (.csr, .req, .p10) и контейнеры PKCS#7 (.p7b) — в виде файла, PEM или Base64.');
   } else {
@@ -69,6 +71,7 @@ function reset() {
   state.items = []; state.models = [];
   $('#result').hidden = true; $('#picker').hidden = true;
   $('#inputCard').classList.remove('compact');
+  fitInput();
   $('#fileLabel').textContent = '';
   $('#clear').hidden = true;
   clearError();
@@ -199,12 +202,18 @@ function updateToggleAll() {
 
 /* ---------- События ---------- */
 const src = $('#src');
+// в свёрнутом виде поле растёт по содержимому, но не выше 12 строк
+function fitInput() {
+  src.style.height = 'auto';
+  if ($('#inputCard').classList.contains('compact')) src.style.height = src.scrollHeight + 3 + 'px';
+}
 let inputTimer;
 src.addEventListener('input', () => {
+  fitInput();
   clearTimeout(inputTimer);
   inputTimer = setTimeout(() => { $('#fileLabel').textContent = ''; handleText(src.value, ''); }, 250);
 });
-src.addEventListener('paste', () => setTimeout(() => { clearTimeout(inputTimer); $('#fileLabel').textContent = ''; handleText(src.value, ''); }, 0));
+src.addEventListener('paste', () => setTimeout(() => { fitInput(); clearTimeout(inputTimer); $('#fileLabel').textContent = ''; handleText(src.value, ''); }, 0));
 
 document.addEventListener('paste', e => {
   if (e.target.closest && e.target.closest('input, textarea')) return;
