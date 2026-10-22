@@ -243,11 +243,6 @@ window.addEventListener('drop', e => {
   if (f) readFile(f);
 });
 
-document.querySelectorAll('[data-sample]').forEach(b => b.addEventListener('click', () => {
-  src.value = SAMPLES[b.dataset.sample];
-  $('#fileLabel').textContent = '';
-  handleText(src.value, '');
-}));
 $('#clear').addEventListener('click', () => { src.value = ''; $('#q').value = ''; reset(); src.focus(); });
 
 $('#q').addEventListener('input', applySearch);
