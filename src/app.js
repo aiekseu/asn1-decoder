@@ -2,7 +2,7 @@
 'use strict';
 
 // Версия релиза — меняется при каждом выпуске (см. CHANGELOG.md)
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 
 /* ======================= Состояние и взаимодействие ======================= */
 const $ = s => document.querySelector(s);
@@ -14,6 +14,27 @@ function showError(title, detail) {
   el.hidden = false;
 }
 function clearError() { $('#error').hidden = true; }
+
+/* ---------- Ссылка на разобранные данные ---------- */
+// DER каждого объекта кладём в #фрагмент (base64url, через «.»): на сервер он не уходит, а ссылкой можно делиться
+const b64u = bytes => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const unb64u = t => Uint8Array.from(atob(t.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+const toPem = (item) => { const t = item.kind === 'csr' ? 'CERTIFICATE REQUEST' : 'CERTIFICATE'; return `-----BEGIN ${t}-----\n${btoa(String.fromCharCode(...item.der)).replace(/.{1,64}/g, '$&\n')}-----END ${t}-----`; };
+let ownHash = '';
+function writeHash(items) {
+  ownHash = items ? '#c=' + items.map(it => b64u(it.der)).join('.') : '';
+  try { history.replaceState(null, '', location.pathname + location.search + ownHash); } catch {}
+}
+function loadFromHash() {
+  const m = /^#c=([\w-]+(?:\.[\w-]+)*)$/.exec(location.hash);
+  if (!m || location.hash === ownHash) return;
+  try {
+    const list = m[1].split('.').map(unb64u);
+    decodeBytesList(list, '');
+    $('#src').value = state.items.map(toPem).join('\n');
+    fitInput();
+  } catch (e) { fail(e); }
+}
 
 function decodeBytesList(list, sourceLabel) {
   clearError();
@@ -27,6 +48,7 @@ function decodeBytesList(list, sourceLabel) {
   $('#inputCard').classList.add('compact');
   fitInput();
   $('#clear').hidden = false;
+  writeHash(items);
 }
 
 function handleText(text, label) {
@@ -57,6 +79,7 @@ function handleBytes(bytes, label) {
   }
 }
 function fail(e) {
+  writeHash(null);
   $('#result').hidden = true; $('#picker').hidden = true;
   $('#inputCard').classList.remove('compact');
   fitInput();
@@ -68,6 +91,7 @@ function fail(e) {
   }
 }
 function reset() {
+  writeHash(null);
   state.items = []; state.models = [];
   $('#result').hidden = true; $('#picker').hidden = true;
   $('#inputCard').classList.remove('compact');
@@ -294,3 +318,6 @@ showOid.addEventListener('change', () => { syncOid(); try { localStorage.setItem
 syncOid();
 
 $('#version').textContent = 'v' + APP_VERSION;
+
+window.addEventListener('hashchange', loadFromHash);
+loadFromHash();
