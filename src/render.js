@@ -184,6 +184,7 @@ function renderSummary(m) {
     })() : null,
     m.kind === 'cert' ? fact('Серийный номер', m.serialHex, { mono: true }) : null,
     m.kind === 'cert' ? fact('Thumbprint (SHA-1)', m.sha1Thumb, { mono: true }) : fact('Идентификатор ключа', m.spki.keyId, { mono: true }),
+    m.kind === 'cert' ? fact('SKID', m.skid, { mono: true }) : null,
   ].filter(Boolean);
 
   const el = $('#summary');

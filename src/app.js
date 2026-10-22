@@ -25,14 +25,18 @@ function writeHash(items) {
   ownHash = items ? '#c=' + items.map(it => b64u(it.der)).join('.') : '';
   try { history.replaceState(null, '', location.pathname + location.search + ownHash); } catch {}
 }
+// В поле ввода показываем DER в виде PEM, чтобы было видно, что данные загружены
+function fillPem() {
+  $('#src').value = state.items.map(toPem).join('\n');
+  fitInput();
+}
 function loadFromHash() {
   const m = /^#c=([\w-]+(?:\.[\w-]+)*)$/.exec(location.hash);
   if (!m || location.hash === ownHash) return;
   try {
     const list = m[1].split('.').map(unb64u);
     decodeBytesList(list, '');
-    $('#src').value = state.items.map(toPem).join('\n');
-    fitInput();
+    fillPem();
   } catch (e) { fail(e); }
 }
 
@@ -88,6 +92,7 @@ function handleBytes(bytes, label) {
       // бинарный DER; хвостовой мусор (переводы строк, нули) отбрасываем
       const n = readNode(bytes, 0, bytes.length);
       decodeBytesList([bytes.subarray(0, n.end)], label);
+      fillPem();
       return;
     }
     let text;

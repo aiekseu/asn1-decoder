@@ -569,7 +569,7 @@ function buildCert(item) {
   if (exts.length) sections.push({ id: 'ext', title: 'Расширения', icon: 'list', blocks: extensionBlocks(exts) });
 
   return {
-    kind: 'cert', subject, issuer, spki, exts, isCA, selfSigned, notBefore, notAfter, pkup, sha1Thumb, serialHex, sections,
+    kind: 'cert', subject, issuer, spki, exts, isCA, selfSigned, notBefore, notAfter, pkup, sha1Thumb, skid, serialHex, sections,
     hasQualified: !!ext('1.2.643.100.112') && !!ext('1.2.643.100.111'),
   };
 }
